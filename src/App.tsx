@@ -9,6 +9,7 @@ export const App = () => {
   ) : (
     <ErrorBoundary>
       <Canvas
+        shadows={true}
         camera={{ position: [0, 5, 5] }}
         fallback={<div>Sorry no WebGL supported!</div>}
       >
