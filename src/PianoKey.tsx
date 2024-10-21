@@ -1,8 +1,9 @@
 import { ThreeElements, useFrame } from '@react-three/fiber';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Mesh } from 'three';
 import { useSpring, a } from '@react-spring/three';
 import { PolySynth } from 'tone';
+import { FlowingNote } from './FlowingNote';
 
 const map: Record<string, string> = {
   a: 'C4',
@@ -26,41 +27,32 @@ type PianoKeyProps = ThreeElements['mesh'] & {
   isBlack?: boolean;
 };
 
-const Flowy = ({ grow }: { grow: boolean }) => {
-  const meshRef = useRef<Mesh>(null!);
-  const [height, setHeight] = useState(1);
-
-  useFrame(() => {
-    if (grow) {
-      setHeight((height) => height + 0.1);
-    }
-
-    if (grow === false) {
-      meshRef.current.position.z -= 0.2;
-    }
-  });
-
-  return (
-    <mesh ref={meshRef} position={[0, 0, -height / 2]}>
-      <boxGeometry args={[0.7, 0.5, height]} />
-    </mesh>
-  );
-};
-
 export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
   const meshRef = useRef<Mesh>(null!);
-
   const [hovered, setHover] = useState(false);
   const [pressed, setPressed] = useState(false);
 
   const [flowies, setFlowies] = useState<boolean[]>([]);
+
+  const cleanup = useCallback(() => {
+    setFlowies((flowies) => {
+      flowies.shift();
+      return [...flowies];
+    });
+  }, []);
 
   const [spring, api] = useSpring(() => ({
     rotation: [0, 0, 0], // Starting with no rotation
     config: { tension: 200, friction: 10, clamp: true }, // Config for smoothness
   }));
 
-  const color = props.isBlack ? 'black' : 'white';
+  const color = props.isBlack ? '#222222' : '#CCCCCC';
+
+  useEffect(() => {
+    if (meshRef.current) {
+      meshRef.current.layers.set(0);
+    }
+  }, []);
 
   useFrame(() => {
     if (pressed && meshRef.current) {
@@ -82,10 +74,15 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (map[event.key] && props.note === map[event.key]) {
+      if (
+        map[event.key] &&
+        props.note === map[event.key] &&
+        pressed === false
+      ) {
         // Only react if the object is selected
-        setPressed(true);
+
         setFlowies((oldFlowies) => [...oldFlowies, true]);
+        setPressed(true);
       }
     };
 
@@ -105,7 +102,7 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [props.note]);
+  }, [props.note, pressed]);
 
   return (
     <group
@@ -116,7 +113,6 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
       }}
       onPointerUp={(event) => {
         event.stopPropagation();
-        console.log('WTF');
         setPressed(false);
         setFlowies((oldFlowies) => oldFlowies.map(() => false));
       }}
@@ -130,9 +126,16 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
       }}
       position={position}
     >
-      {flowies.map((x, index) => (
-        <Flowy key={index} grow={x} />
-      ))}
+      <group>
+        {flowies.map((x, index) => (
+          <FlowingNote
+            black={Boolean(props.isBlack)}
+            cleanup={cleanup}
+            key={index}
+            grow={x}
+          />
+        ))}
+      </group>
 
       <a.group
         rotation={
@@ -151,8 +154,9 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
           ref={meshRef}
           scale={props.isBlack ? [0.7, 1, 1] : 1}
         >
-          <boxGeometry args={[1, 0.6, 2.5]} />
+          <boxGeometry args={[1, 0.3, 2.5]} />
           <meshStandardMaterial
+            emissive={0}
             color={hovered || pressed ? 'MediumSpringGreen' : color}
           />
         </mesh>
