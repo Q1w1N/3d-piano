@@ -4,6 +4,8 @@ import { Mesh } from 'three';
 import { useSpring, a } from '@react-spring/three';
 import { PolySynth } from 'tone';
 import { FlowingNote } from './FlowingNote';
+import { bpmAtom } from './atoms/BpmAtom';
+import { useAtom } from 'jotai';
 
 const map: Record<string, string> = {
   a: 'C4',
@@ -29,10 +31,17 @@ type PianoKeyProps = ThreeElements['mesh'] & {
 
 export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
   const meshRef = useRef<Mesh>(null!);
+  const [bpm] = useAtom(bpmAtom);
   const [hovered, setHover] = useState(false);
   const [pressed, setPressed] = useState(false);
+  const pressRef = useRef(pressed);
 
   const [flowies, setFlowies] = useState<boolean[]>([]);
+
+  // Update refs on every render to keep the latest values
+  useEffect(() => {
+    pressRef.current = pressed;
+  }, [pressed]);
 
   const cleanup = useCallback(() => {
     setFlowies((flowies) => {
@@ -77,10 +86,8 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
       if (
         map[event.key] &&
         props.note === map[event.key] &&
-        pressed === false
+        !pressRef.current
       ) {
-        // Only react if the object is selected
-
         setFlowies((oldFlowies) => [...oldFlowies, true]);
         setPressed(true);
       }
@@ -102,33 +109,14 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [props.note, pressed]);
+  }, [props.note]);
 
   return (
-    <group
-      onPointerDown={(event) => {
-        event.stopPropagation();
-        setPressed(true);
-        setFlowies((oldFlowies) => [...oldFlowies, true]);
-      }}
-      onPointerUp={(event) => {
-        event.stopPropagation();
-        setPressed(false);
-        setFlowies((oldFlowies) => oldFlowies.map(() => false));
-      }}
-      onPointerOver={(event) => {
-        event.stopPropagation();
-        setHover(true);
-      }}
-      onPointerOut={() => {
-        setHover(false);
-        setPressed(false);
-      }}
-      position={position}
-    >
+    <group position={position}>
       <group>
         {flowies.map((x, index) => (
           <FlowingNote
+            bpm={bpm}
             black={Boolean(props.isBlack)}
             cleanup={cleanup}
             key={index}
@@ -136,31 +124,52 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
           />
         ))}
       </group>
-
-      <a.group
-        rotation={
-          spring.rotation.to((x, y, z) => [x, y, z]) as unknown as [
-            number,
-            number,
-            number,
-          ]
-        }
+      <group
+        onPointerDown={(event) => {
+          event.stopPropagation();
+          setPressed(true);
+          setFlowies((oldFlowies) => [...oldFlowies, true]);
+        }}
+        onPointerUp={(event) => {
+          event.stopPropagation();
+          setPressed(false);
+          setFlowies((oldFlowies) => oldFlowies.map(() => false));
+        }}
+        onPointerOver={(event) => {
+          event.stopPropagation();
+          setHover(true);
+        }}
+        onPointerOut={() => {
+          setHover(false);
+          setPressed(false);
+        }}
       >
-        <mesh
-          castShadow={true}
-          receiveShadow={true}
-          {...props}
-          position={[0, 0, 1]}
-          ref={meshRef}
-          scale={props.isBlack ? [0.7, 1, 1] : 1}
+        <a.group
+          rotation={
+            spring.rotation.to((x, y, z) => [x, y, z]) as unknown as [
+              number,
+              number,
+              number,
+            ]
+          }
         >
-          <boxGeometry args={[1, 0.3, 2.5]} />
-          <meshStandardMaterial
-            emissive={0}
-            color={hovered || pressed ? 'MediumSpringGreen' : color}
-          />
-        </mesh>
-      </a.group>
+          <mesh
+            castShadow={true}
+            receiveShadow={true}
+            {...props}
+            position={props.isBlack ? [0, 0, 0.9] : [0, 0, 1.25]}
+            ref={meshRef}
+          >
+            <boxGeometry
+              args={props.isBlack ? [0.6, 0.3, 1.8] : [1, 0.3, 2.5]}
+            />
+            <meshStandardMaterial
+              emissive={0}
+              color={hovered || pressed ? 'MediumSpringGreen' : color}
+            />
+          </mesh>
+        </a.group>
+      </group>
     </group>
   );
 };

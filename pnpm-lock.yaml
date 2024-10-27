@@ -20,6 +20,9 @@ importers:
       '@react-three/postprocessing':
         specifier: ^2.16.3
         version: 2.16.3(@react-three/fiber@8.17.10(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.169.0))(@types/three@0.169.0)(react@18.3.1)(three@0.169.0)
+      jotai:
+        specifier: ^2.10.1
+        version: 2.10.1(@types/react@18.3.11)(react@18.3.1)
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -1033,6 +1036,18 @@ packages:
     resolution: {integrity: sha512-fXtDA0X0t0eBYAGLVM5YsgJGsJ5jEmqZEPrGbzdf5awjv0xE7nqv3TVnvtUF060Tkes15DbDAKW/I48vsb6SyA==}
     peerDependencies:
       react: '>=18.0'
+
+  jotai@2.10.1:
+    resolution: {integrity: sha512-4FycO+BOTl2auLyF2Chvi6KTDqdsdDDtpaL/WHQMs8f3KS1E3loiUShQzAzFA/sMU5cJ0hz/RT1xum9YbG/zaA==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      '@types/react': '>=17.0.0'
+      react: '>=17.0.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      react:
+        optional: true
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -2461,6 +2476,11 @@ snapshots:
   its-fine@1.2.5(react@18.3.1):
     dependencies:
       '@types/react-reconciler': 0.28.8
+      react: 18.3.1
+
+  jotai@2.10.1(@types/react@18.3.11)(react@18.3.1):
+    optionalDependencies:
+      '@types/react': 18.3.11
       react: 18.3.1
 
   js-tokens@4.0.0: {}
