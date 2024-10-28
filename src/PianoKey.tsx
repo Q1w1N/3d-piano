@@ -8,18 +8,23 @@ import { bpmAtom } from './atoms/BpmAtom';
 import { useAtom } from 'jotai';
 
 const map: Record<string, string> = {
-  a: 'C4',
-  w: 'C#4',
-  s: 'D4',
-  e: 'D#4',
-  d: 'E4',
-  f: 'F4',
-  t: 'F#4',
-  g: 'G4',
-  y: 'G#4',
-  h: 'A4',
-  u: 'A#4',
-  j: 'B4',
+  'a': 'C3',
+  'w': 'C#3',
+  's': 'D3',
+  'e': 'D#3',
+  'd': 'E3',
+  'f': 'F3',
+  't': 'F#3',
+  'g': 'G3',
+  'y': 'G#3',
+  'h': 'A3',
+  'u': 'A#3',
+  'j': 'B3',
+  'k': 'C4',
+  'o': 'C#4',
+  'l': 'D4',
+  'p': 'D#4',
+  ';': 'E4',
 };
 
 const synth = new PolySynth().toDestination();
@@ -111,7 +116,7 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
     };
   }, [props.note]);
 
-  return (
+  return Object.values(map).find((val) => val === props.note) ? (
     <group position={position}>
       <group>
         {flowies.map((x, index) => (
@@ -171,5 +176,5 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
         </a.group>
       </group>
     </group>
-  );
+  ) : null;
 };

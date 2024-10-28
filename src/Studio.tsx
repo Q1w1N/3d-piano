@@ -45,11 +45,11 @@ export const Studio = () => {
 
       const maxDim = Math.max(size.x, size.y, size.z);
       const distance =
-        maxDim / (2 * Math.tan((cameraRef.current.fov * Math.PI) / 360));
+        maxDim / (3 * Math.tan((cameraRef.current.fov * Math.PI) / 360));
 
-      cameraRef.current.position.set(center.x, 30, distance - 20);
+      cameraRef.current.position.set(center.x, 20, distance);
 
-      const centerS = new Vector3(center.x, center.y, -10);
+      const centerS = new Vector3(center.x, center.y, -distance);
       cameraRef.current.lookAt(centerS);
 
       cameraRef.current.updateProjectionMatrix();
@@ -68,9 +68,8 @@ export const Studio = () => {
       <pointLight position={[-3, 10, 5]} decay={0.4} intensity={10} />
       <pointLight position={[3, 10, 5]} decay={0.4} intensity={10} />
       <group ref={pianoRef}>
-        <Octave offset={-9.64} pitch={3} />
-        <Octave offset={-2.5} pitch={4} />
-        <Octave offset={4.64} pitch={5} />
+        <Octave offset={-2.5} pitch={3} />
+        <Octave offset={4.64} pitch={4} />
       </group>
 
       {addReflection ? (
