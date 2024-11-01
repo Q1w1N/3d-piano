@@ -5,6 +5,7 @@ import { useAtom } from 'jotai';
 import { bpmAtom } from './atoms/BpmAtom';
 import { noteColorsAtom } from './atoms/NoteColorsAtom';
 import { noteSpeedAtom } from './atoms/NoteSpeedAtom';
+import { PianoControls } from './PianoControls';
 
 const Metronome = () => {
   const [metronome, setMetronome] = useState<number | null>(null);
@@ -102,6 +103,7 @@ const Metronome = () => {
           />
         </label>
       </div>
+      <PianoControls />
     </div>
   );
 };

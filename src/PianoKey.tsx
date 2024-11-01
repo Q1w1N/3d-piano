@@ -1,31 +1,12 @@
 import { ThreeElements, useFrame } from '@react-three/fiber';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Mesh } from 'three';
 import { useSpring, a } from '@react-spring/three';
 import { PolySynth } from 'tone';
 import { FlowingNote } from './FlowingNote';
 import { bpmAtom } from './atoms/BpmAtom';
 import { useAtom } from 'jotai';
-
-const map: Record<string, string> = {
-  'a': 'C3',
-  'w': 'C#3',
-  's': 'D3',
-  'e': 'D#3',
-  'd': 'E3',
-  'f': 'F3',
-  't': 'F#3',
-  'g': 'G3',
-  'y': 'G#3',
-  'h': 'A3',
-  'u': 'A#3',
-  'j': 'B3',
-  'k': 'C4',
-  'o': 'C#4',
-  'l': 'D4',
-  'p': 'D#4',
-  ';': 'E4',
-};
+import { midiAtom, noteToMIDINumber } from './atoms/MidiAtom';
 
 const synth = new PolySynth().toDestination();
 
@@ -39,13 +20,34 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
   const [bpm] = useAtom(bpmAtom);
   const [hovered, setHover] = useState(false);
   const [pressed, setPressed] = useState(false);
-  const pressRef = useRef(pressed);
+  const color = props.isBlack ? '#222222' : '#CCCCCC';
+
+  const midiNoteNumber = useMemo(() => {
+    return noteToMIDINumber(props.note);
+  }, [props.note]);
+  const [midi] = useAtom(midiAtom);
 
   const [flowies, setFlowies] = useState<boolean[]>([]);
 
-  // Update refs on every render to keep the latest values
   useEffect(() => {
-    pressRef.current = pressed;
+    const notePlaying = midi.has(midiNoteNumber);
+    if (notePlaying && pressed === false) {
+      setPressed(true);
+      synth.triggerAttack(props.note);
+      return;
+    }
+    if (!notePlaying && pressed === true) {
+      setPressed(false);
+      synth.triggerRelease(props.note);
+    }
+  }, [pressed, midi, midiNoteNumber, props.note]);
+
+  useEffect(() => {
+    if (pressed) {
+      setFlowies((oldFlowies) => [...oldFlowies, true]);
+    } else {
+      setFlowies((oldFlowies) => oldFlowies.map(() => false));
+    }
   }, [pressed]);
 
   const cleanup = useCallback(() => {
@@ -53,14 +55,15 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
       flowies.shift();
       return [...flowies];
     });
-  }, []);
+
+    synth.triggerRelease(props.note);
+    setPressed(false);
+  }, [props.note]);
 
   const [spring, api] = useSpring(() => ({
     rotation: [0, 0, 0], // Starting with no rotation
     config: { tension: 200, friction: 10, clamp: true }, // Config for smoothness
   }));
-
-  const color = props.isBlack ? '#222222' : '#CCCCCC';
 
   useEffect(() => {
     if (meshRef.current) {
@@ -78,45 +81,7 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
     }
   });
 
-  useEffect(() => {
-    if (pressed) {
-      synth.triggerAttack(props.note);
-    } else {
-      synth.triggerRelease(props.note);
-    }
-  }, [pressed, props.note]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        map[event.key] &&
-        props.note === map[event.key] &&
-        !pressRef.current
-      ) {
-        setFlowies((oldFlowies) => [...oldFlowies, true]);
-        setPressed(true);
-      }
-    };
-
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (map[event.key] && props.note === map[event.key]) {
-        setPressed(false);
-        setFlowies((oldFlowies) => oldFlowies.map(() => false));
-      }
-    };
-
-    // Attach event listeners
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    // Cleanup event listeners when component unmounts
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, [props.note]);
-
-  return Object.values(map).find((val) => val === props.note) ? (
+  return (
     <group position={position}>
       <group>
         {flowies.map((x, index) => (
@@ -176,5 +141,5 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
         </a.group>
       </group>
     </group>
-  ) : null;
+  );
 };

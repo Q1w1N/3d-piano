@@ -4,6 +4,7 @@ import { Studio } from './Studio';
 import { ACESFilmicToneMapping, Fog } from 'three';
 import { Bloom, EffectComposer } from '@react-three/postprocessing';
 import Metronome from './Metronome';
+
 export const App = () => {
   const { ErrorBoundary, didCatch, error } = useErrorBoundary();
 

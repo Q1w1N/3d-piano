@@ -17,6 +17,7 @@ export const FlowingNote = ({
   bpm: number;
 }) => {
   const meshRef = useRef<Group>(null!);
+  const removingRef = useRef<boolean>(false);
   const [height, setHeight] = useState(0);
   const [noteSpeed] = useAtom(noteSpeedAtom);
   const [speed, setSpeed] = useState(bpm * noteSpeed);
@@ -28,11 +29,18 @@ export const FlowingNote = ({
 
   useFrame((_, delta) => {
     if (grow) {
-      console.log(delta);
       setHeight((height) => height + delta * speed);
       if (meshRef.current) {
         meshRef.current.position.z = -height / 2;
       }
+    }
+
+    if (
+      grow === false &&
+      meshRef.current.position.z + height / 2 < -30 &&
+      !removingRef.current
+    ) {
+      meshRef.current.parent?.remove(meshRef.current);
     }
 
     if (grow === false) {
@@ -41,15 +49,10 @@ export const FlowingNote = ({
   });
 
   useEffect(() => {
-    if (grow === false && meshRef.current.position.z > 50) {
-      meshRef.current.parent?.remove(meshRef.current);
-    }
     return () => {
-      if (grow === false) {
-        cleanup();
-      }
+      cleanup();
     };
-  }, [grow, cleanup]);
+  }, [cleanup]);
 
   return (
     <group ref={meshRef} position={[0, 0, 0]}>
