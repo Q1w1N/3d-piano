@@ -18,6 +18,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "three": "^0.169.0",
+    "tonal": "^6.3.0",
     "tone": "^15.0.4",
     "use-error-boundary": "^2.0.6"
   },

@@ -6,25 +6,38 @@ import { PolySynth } from 'tone';
 import { FlowingNote } from './FlowingNote';
 import { bpmAtom } from './atoms/BpmAtom';
 import { useAtom } from 'jotai';
-import { midiAtom, noteToMIDINumber } from './atoms/MidiAtom';
+import { midiAtom } from './atoms/MidiAtom';
+import { Note } from 'tonal';
 
 const synth = new PolySynth().toDestination();
 
 type PianoKeyProps = ThreeElements['mesh'] & {
   note: string;
-  isBlack?: boolean;
+  octave: number;
 };
 
-export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
+export const PianoKey = ({
+  position,
+  note,
+  octave,
+  ...props
+}: PianoKeyProps) => {
   const meshRef = useRef<Mesh>(null!);
   const [bpm] = useAtom(bpmAtom);
   const [hovered, setHover] = useState(false);
   const [pressed, setPressed] = useState(false);
-  const color = props.isBlack ? '#222222' : '#CCCCCC';
+  const [isBlack] = useState(Note.accidentals(note) !== '');
+  const fullNote = useMemo(() => {
+    return `${note}${octave}`;
+  }, [octave, note]);
+
+  const color = isBlack ? '#222222' : '#CCCCCC';
 
   const midiNoteNumber = useMemo(() => {
-    return noteToMIDINumber(props.note);
-  }, [props.note]);
+    // console.log(fullNote, Number(Note.midi(fullNote)));
+    return Number(Note.midi(fullNote));
+  }, [fullNote]);
+
   const [midi] = useAtom(midiAtom);
 
   const [flowies, setFlowies] = useState<boolean[]>([]);
@@ -33,14 +46,15 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
     const notePlaying = midi.has(midiNoteNumber);
     if (notePlaying && pressed === false) {
       setPressed(true);
-      synth.triggerAttack(props.note);
+      // synth.triggerAttack(props.note);
+      // console.log(midiNoteNumber);
       return;
     }
     if (!notePlaying && pressed === true) {
       setPressed(false);
-      synth.triggerRelease(props.note);
+      // synth.triggerRelease(props.note);
     }
-  }, [pressed, midi, midiNoteNumber, props.note]);
+  }, [pressed, midi, midiNoteNumber]);
 
   useEffect(() => {
     if (pressed) {
@@ -56,9 +70,9 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
       return [...flowies];
     });
 
-    synth.triggerRelease(props.note);
+    synth.triggerRelease(note);
     setPressed(false);
-  }, [props.note]);
+  }, [note]);
 
   const [spring, api] = useSpring(() => ({
     rotation: [0, 0, 0], // Starting with no rotation
@@ -81,13 +95,17 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
     }
   });
 
+  // useEffect(() => {
+  //   console.log(pressed);
+  // }, [pressed]);
+
   return (
     <group position={position}>
       <group>
         {flowies.map((x, index) => (
           <FlowingNote
             bpm={bpm}
-            black={Boolean(props.isBlack)}
+            black={isBlack}
             cleanup={cleanup}
             key={index}
             grow={x}
@@ -102,6 +120,7 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
         }}
         onPointerUp={(event) => {
           event.stopPropagation();
+          console.log('LOL');
           setPressed(false);
           setFlowies((oldFlowies) => oldFlowies.map(() => false));
         }}
@@ -127,12 +146,10 @@ export const PianoKey = ({ position, ...props }: PianoKeyProps) => {
             castShadow={true}
             receiveShadow={true}
             {...props}
-            position={props.isBlack ? [0, 0, 0.9] : [0, 0, 1.25]}
+            position={isBlack ? [0, 0, 0.9] : [0, 0, 1.25]}
             ref={meshRef}
           >
-            <boxGeometry
-              args={props.isBlack ? [0.6, 0.3, 1.8] : [1, 0.3, 2.5]}
-            />
+            <boxGeometry args={isBlack ? [0.6, 0.3, 1.8] : [1, 0.3, 2.5]} />
             <meshStandardMaterial
               emissive={0}
               color={hovered || pressed ? 'MediumSpringGreen' : color}

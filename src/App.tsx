@@ -18,7 +18,7 @@ export const App = () => {
           fallback={<div>Sorry no WebGL supported!</div>}
           onCreated={({ gl, scene }) => {
             gl.setClearColor('#000000');
-            scene.fog = new Fog('#000000', 15, 45);
+            scene.fog = new Fog('#000000', 30, 60);
             gl.toneMapping = ACESFilmicToneMapping;
             scene.traverse((obj) => obj.layers.enable(0));
           }}
