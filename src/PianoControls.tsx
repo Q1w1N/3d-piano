@@ -133,17 +133,17 @@ export const PianoControls = () => {
   //   }
   // }, [midiAccess, onMidiMessage]);
 
-  // useEffect(() => {
-  //   if (selectedDeviceId === 'Keyboard') {
-  //     window.addEventListener('keydown', onKeyboardKeyDown);
-  //     window.addEventListener('keyup', onKeyboardKeyUp);
-  //   }
+  useEffect(() => {
+    if (selectedDeviceId === 'Keyboard') {
+      window.addEventListener('keydown', onKeyboardKeyDown);
+      window.addEventListener('keyup', onKeyboardKeyUp);
+    }
 
-  //   return () => {
-  //     window.removeEventListener('keydown', onKeyboardKeyDown);
-  //     window.removeEventListener('keydown', onKeyboardKeyUp);
-  //   };
-  // }, [onKeyboardKeyDown, onKeyboardKeyUp, selectedDeviceId]);
+    return () => {
+      window.removeEventListener('keydown', onKeyboardKeyDown);
+      window.removeEventListener('keydown', onKeyboardKeyUp);
+    };
+  }, [onKeyboardKeyDown, onKeyboardKeyUp, selectedDeviceId]);
 
   return (
     <>
